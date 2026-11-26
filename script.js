@@ -8,7 +8,7 @@
   var ctx = canvas.getContext('2d');
 
   var W = 0, H = 0, dpr = 1;    // tamaño de la ventana y densidad de píxeles
-  var ZOOM = 2;                 // imagen ampliada respecto a la altura de la pantalla
+  var ZOOM = 1.35;              // imagen ampliada respecto a la altura de la pantalla (menos recorte)
   var escala = 1;               // píxeles de pantalla por cada unidad de la imagen girada
   var camX = 0, camY = 0;       // desplazamiento de la imagen (paneo horizontal)
   var minCamX = 0;              // límite izquierdo del paneo (negativo)
@@ -46,7 +46,9 @@
     ctxFondo.setTransform(dpr, 0, 0, dpr, 0, 0);
 
     // Escala: la altura de la imagen girada ocupa ZOOM veces la pantalla
-    escala = (H / PUNTOS_ALTO) * ZOOM;
+    // Escala: la altura ocupa ZOOM veces la pantalla, y la anchura al menos 1.15 veces
+    // la pantalla para que siempre se pueda desplazar (sobre todo en pantallas altas o móviles)
+    escala = Math.max((H / PUNTOS_ALTO) * ZOOM, (W * 1.15) / PUNTOS_ANCHO);
     var anchoMundo = PUNTOS_ANCHO * escala;
     var altoMundo = PUNTOS_ALTO * escala;
 
@@ -228,6 +230,26 @@
       e.preventDefault();
     }
   });
+
+  // ---- Arrastrar con el dedo o el ratón para desplazar la imagen (iPad, móvil, PC)
+  var arrastrando = false;
+  var ultimoX = 0;
+  window.addEventListener('pointerdown', function (e) {
+    // No arrastrar si el toque empieza en un botón de audio
+    if (e.target.closest && e.target.closest('.boton')) return;
+    arrastrando = true;
+    ultimoX = e.clientX;
+  });
+  window.addEventListener('pointermove', function (e) {
+    if (!arrastrando) return;
+    panear(e.clientX - ultimoX);   // arrastrar hacia la izquierda mueve la imagen a la izquierda
+    ultimoX = e.clientX;
+  });
+  function terminarArrastre() {
+    arrastrando = false;
+  }
+  window.addEventListener('pointerup', terminarArrastre);
+  window.addEventListener('pointercancel', terminarArrastre);
 
   // ---- Cursor: guarda su posición para apartar las partículas
   window.addEventListener('pointermove', function (e) {
