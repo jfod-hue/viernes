@@ -9,7 +9,8 @@
 
   var W = 0, H = 0, dpr = 1;    // tamaño de la ventana y densidad de píxeles
   var ZOOM = 2;                 // imagen ampliada respecto a la altura de la pantalla
-  var TAMANO = 0.85;            // factor de tamaño general (imagen, partículas y botones); 1 = normal
+  var CENTRO_BOTONES = 382;     // centro horizontal de los botones (en la imagen girada)
+  var ANCHO_BOTONES = 414;      // ancho que ocupan los botones (en la imagen girada)
   var escala = 1;               // píxeles de pantalla por cada unidad de la imagen girada
   var camX = 0, camY = 0;       // desplazamiento de la imagen (paneo horizontal)
   var minCamX = 0;              // límite izquierdo del paneo (negativo)
@@ -47,15 +48,22 @@
     ctxFondo.setTransform(dpr, 0, 0, dpr, 0, 0);
 
     // Escala: la altura de la imagen girada ocupa ZOOM veces la pantalla
-    // Escala: la altura ocupa ZOOM veces la pantalla, multiplicada por TAMANO
-    escala = (H / PUNTOS_ALTO) * ZOOM * TAMANO;
+    // Escala: la altura de la imagen girada ocupa ZOOM veces la pantalla
+    escala = (H / PUNTOS_ALTO) * ZOOM;
+    // En pantallas verticales (móvil) se reduce la imagen para que los tres botones
+    // quepan a la vez en la pantalla
+    var retrato = H > W;
+    if (retrato) {
+      escala = Math.min(escala, (W * 0.7) / ANCHO_BOTONES);
+    }
     var anchoMundo = PUNTOS_ANCHO * escala;
     var altoMundo = PUNTOS_ALTO * escala;
 
     camY = (H - altoMundo) / 2;               // centrado vertical (puede recortar arriba y abajo)
     minCamX = Math.min(0, W - anchoMundo);    // lo más a la izquierda que se puede desplazar
     if (primeraVez) {
-      camX = minCamX;           // empieza viendo la parte derecha
+      // Móvil: empieza centrado en los botones. Escritorio: empieza viendo la parte derecha
+      camX = retrato ? (W / 2 - CENTRO_BOTONES * escala) : minCamX;
       primeraVez = false;
     }
     camX = limitarCam(camX);
@@ -230,6 +238,26 @@
       e.preventDefault();
     }
   });
+
+  // ---- Arrastrar con el dedo o el ratón para desplazar la imagen (iPad, móvil, PC)
+  var arrastrando = false;
+  var ultimoX = 0;
+  window.addEventListener('pointerdown', function (e) {
+    // No arrastrar si el toque empieza en un botón de audio
+    if (e.target.closest && e.target.closest('.boton')) return;
+    arrastrando = true;
+    ultimoX = e.clientX;
+  });
+  window.addEventListener('pointermove', function (e) {
+    if (!arrastrando) return;
+    panear(e.clientX - ultimoX);   // arrastrar hacia la izquierda mueve la imagen a la izquierda
+    ultimoX = e.clientX;
+  });
+  function terminarArrastre() {
+    arrastrando = false;
+  }
+  window.addEventListener('pointerup', terminarArrastre);
+  window.addEventListener('pointercancel', terminarArrastre);
 
   // ---- Cursor: guarda su posición para apartar las partículas
   window.addEventListener('pointermove', function (e) {
