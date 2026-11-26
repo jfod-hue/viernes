@@ -14,6 +14,7 @@
   var escala = 1;               // píxeles de pantalla por cada unidad de la imagen girada
   var camX = 0, camY = 0;       // desplazamiento de la imagen (paneo horizontal)
   var minCamX = 0;              // límite izquierdo del paneo (negativo)
+  var maxCamX = 0;              // límite derecho del paneo
   var primeraVez = true;        // para empezar mostrando la parte derecha
   var fondoSucio = true;        // hay que volver a dibujar la imagen de fondo
 
@@ -35,7 +36,7 @@
   function calcularDiseno() {
     W = window.innerWidth;
     H = window.innerHeight;
-    dpr = window.devicePixelRatio || 1;
+    dpr = Math.min(window.devicePixelRatio || 1, 2);   // máximo 2: ahorra trabajo en móviles
 
     // Ajusta el tamaño de ambos canvas a la ventana (con densidad de píxeles)
     [canvas, fondoCanvas].forEach(function (c) {
@@ -49,7 +50,9 @@
 
     // Escala: la altura de la imagen girada ocupa ZOOM veces la pantalla
     // Escala: la altura de la imagen girada ocupa ZOOM veces la pantalla
-    escala = (H / PUNTOS_ALTO) * ZOOM;
+    // En pantallas bajas (móvil apaisado) se usa zoom 1 para que se vea la imagen entera
+    var zoom = H < 700 ? 1 : ZOOM;
+    escala = (H / PUNTOS_ALTO) * zoom;
     // En pantallas verticales (móvil) se reduce la imagen para que los tres botones
     // quepan a la vez en la pantalla
     var retrato = H > W;
@@ -60,7 +63,15 @@
     var altoMundo = PUNTOS_ALTO * escala;
 
     camY = (H - altoMundo) / 2;               // centrado vertical (puede recortar arriba y abajo)
-    minCamX = Math.min(0, W - anchoMundo);    // lo más a la izquierda que se puede desplazar
+    // Si la imagen es más ancha que la pantalla, se puede desplazar entre minCamX y maxCamX;
+    // si es más estrecha, se queda centrada
+    if (anchoMundo >= W) {
+      minCamX = W - anchoMundo;               // lo más a la izquierda que se puede desplazar
+      maxCamX = 0;                            // lo más a la derecha
+    } else {
+      minCamX = (W - anchoMundo) / 2;
+      maxCamX = (W - anchoMundo) / 2;
+    }
     if (primeraVez) {
       // Móvil: empieza centrado en los botones. Escritorio: empieza viendo la parte derecha
       camX = retrato ? (W / 2 - CENTRO_BOTONES * escala) : minCamX;
@@ -78,7 +89,7 @@
 
   // Mantiene el paneo entre el límite izquierdo y 0
   function limitarCam(v) {
-    return Math.max(minCamX, Math.min(0, v));
+    return Math.max(minCamX, Math.min(maxCamX, v));
   }
 
   // ---- Crear partículas a partir de PUNTOS (pares x, y)
@@ -182,18 +193,23 @@
     ctx.clearRect(0, 0, W, H);
 
     // Partículas de fondo, semitransparentes
+    // Se dibujan en un solo trazo (mucho más ligero en móviles que un fillRect por partícula)
     ctx.fillStyle = 'rgba(255,255,255,0.6)';
+    ctx.beginPath();
     for (var i = 0; i < polvo.length; i++) {
       var p = polvo[i];
-      ctx.fillRect(p.x, p.y, p.r, p.r);
+      ctx.rect(p.x, p.y, p.r, p.r);
     }
+    ctx.fill();
 
     // Partículas de la imagen, blancas
     ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
     for (var j = 0; j < siluetas.length; j++) {
       var s = siluetas[j];
-      ctx.fillRect(s.x, s.y, 1.6, 1.6);
+      ctx.rect(s.x, s.y, 1.6, 1.6);
     }
+    ctx.fill();
   }
 
   // ---- Bucle principal (unos 60 cuadros por segundo)
