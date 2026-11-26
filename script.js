@@ -17,6 +17,10 @@
   var primeraVez = true;        // para empezar mostrando la parte derecha
   var fondoSucio = true;        // hay que volver a dibujar la imagen de fondo
 
+  // En dispositivos táctiles (móvil, iPad) la imagen no se mueve: ni flota,
+  // ni se aparta del dedo, ni las partículas de fondo se desplazan
+  var ESTATICO = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+
   // Cursor
   var raton = { x: -9999, y: -9999 };
   var RADIO = 110;              // distancia de influencia del cursor (px)
@@ -129,6 +133,12 @@
   function actualizarSiluetas(t) {
     for (var i = 0; i < siluetas.length; i++) {
       var p = siluetas[i];
+      if (ESTATICO) {
+        // Móvil: cada partícula queda en su sitio, sin movimiento
+        p.x = camX + p.hx;
+        p.y = camY + p.hy;
+        continue;
+      }
       // Destino: posición en la imagen con el paneo actual y un ligero movimiento flotante
       var tx = camX + p.hx + Math.sin(t * p.velFase + p.fase) * p.amp;
       var ty = camY + p.hy + Math.cos(t * p.velFase * 0.8 + p.fase) * p.amp;
@@ -147,6 +157,7 @@
 
   // ---- Mueve las partículas de fondo (deriva lenta y repulsión del cursor)
   function actualizarPolvo() {
+    if (ESTATICO) return;   // móvil: las partículas de fondo tampoco se mueven
     for (var i = 0; i < polvo.length; i++) {
       var p = polvo[i];
       empujar(p);
