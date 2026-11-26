@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cuello</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Capa 1: imagen de fondo -->
+  <canvas id="fondo"></canvas>
+
+  <!-- Capa 2: botones (encima de la imagen, debajo de las partículas) -->
+  <!-- data-px / data-py: punto de anclaje dentro de la imagen girada (se mueve con ella) -->
+  <!-- data-audio: id del <audio> que reproduce cada botón -->
+  <div class="botones">
+    <button class="boton" data-audio="audio-00" data-px="175" data-py="304" aria-label="Audio 00"></button>
+    <button class="boton" data-audio="audio-01" data-px="589" data-py="200" aria-label="Audio 01"></button>
+    <button class="boton" data-audio="audio-02" data-px="587" data-py="382" aria-label="Audio 02"></button>
+  </div>
+
+  <!-- Capa 3: partículas (encima de todo, no bloquean los clics) -->
+  <canvas id="lienzo"></canvas>
+
+  <!-- Audios de cada botón (preload="auto" los carga al abrir la página) -->
+  <audio id="audio-00" src="AUDIO/00.mp4" preload="auto"></audio>
+  <audio id="audio-01" src="AUDIO/01.mp4" preload="auto"></audio>
+  <audio id="audio-02" src="AUDIO/02.mp4" preload="auto"></audio>
+
+  <!-- Orden importante: puntos.js primero (datos), luego script.js y audio.js -->
+  <script src="puntos.js"></script>
+  <script src="script.js"></script>
+  <script src="audio.js"></script>
+</body>
+</html>
