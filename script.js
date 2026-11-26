@@ -239,26 +239,6 @@
     }
   });
 
-  // ---- Arrastrar con el dedo o el ratón para desplazar la imagen (iPad, móvil, PC)
-  var arrastrando = false;
-  var ultimoX = 0;
-  window.addEventListener('pointerdown', function (e) {
-    // No arrastrar si el toque empieza en un botón de audio
-    if (e.target.closest && e.target.closest('.boton')) return;
-    arrastrando = true;
-    ultimoX = e.clientX;
-  });
-  window.addEventListener('pointermove', function (e) {
-    if (!arrastrando) return;
-    panear(e.clientX - ultimoX);   // arrastrar hacia la izquierda mueve la imagen a la izquierda
-    ultimoX = e.clientX;
-  });
-  function terminarArrastre() {
-    arrastrando = false;
-  }
-  window.addEventListener('pointerup', terminarArrastre);
-  window.addEventListener('pointercancel', terminarArrastre);
-
   // ---- Cursor: guarda su posición para apartar las partículas
   window.addEventListener('pointermove', function (e) {
     raton.x = e.clientX;
